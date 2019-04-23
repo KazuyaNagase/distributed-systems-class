@@ -1,45 +1,32 @@
 'use strict';
-let net = require('net');
+const net = require('net');
+const crypto = require('crypto');
+const Client = require('../model/client.js');
+
+// 対応表のMemo
+let layer2protocol = {
+    tcp: '0000',
+    udp: 'FFFF'
+}
 
 let server = net.createServer();
-// server.maxConnections = 10;
-
-function Client(socket) {
-    this.socket = socket;
-}
-
-Client.prototype.writeData = (d) => {
-    let socket = this.socket;
-    if(socket.writable) {
-        // client側に送信するメッセージ
-    }
-}
-
-// L2をパースして結果を返す
-Client.prototype.parseLayer1 = (ip) => {
-
-}
-
-// L3をパースして結果を返す
-Client.prototype.parseLayer2 = (protocol) => {
-
-}
-
-// データを標準出力で表示
-Client.prototype.dataLogger = (data) => {
-
-}
+server.maxConnections = 10;
 
 let clients = {};
 let clientsCounter = 0;
 
-server.on('connection', function (socket) {
+server.on('connection', (socket) => {
     clients[++clientsCounter] = new Client(socket);
 
     console.log('--- client No.' + clientsCounter + ' connection starts ---------------------------');
 
-    socket.on('send', function (data) {
-
+    socket.on('data', (data) => {
+        // 8bitバイナリ形式に変換
+        binary = new Uint8Array(data.length);
+        console.log(binary);
+        Client.parseL1Header(binary);
+        Client.parseL2Header(binary, ischeck);
+        Client.dataLogger(binary);
     });
 
     socket.on('close', function (socket) {
