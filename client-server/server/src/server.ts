@@ -11,15 +11,33 @@ let clientsCounter = 0;
 server.on('connection', (socket) => {
     clients[++clientsCounter];
 
-    console.log('--- client No.' + clientsCounter + ' connection starts ---------------------------');
+    console.log('--- client No.' + clientsCounter + ' connection starts ');
 
-    socket.on('data', (data) => {
-        const layer1 = new Layer1(data);
-        if(layer1.isSafe) 
+    socket.on('data', (packet) => {
+        // layer1をparses
+        const layer1 = new Layer1(packet);
+        layer1.output();
+
+        // layer2をparse
+        const l2 = packet.slice(layer1.size, packet.length);
+        const layer2 = new Layer2(l2, layer1.type);
+        if (layer2.isSafe) {
+            layer2.output();
+        } else {
+            socket.end(); // チェックサムが正しくない場合には切断する
+            return;
+        }
+
+        const p = packet.slice(layer1.size + layer2.size, packet.length);
+        const payload = new Payload(p);
+        payload.output();
+
+        // 切断する
+        socket.end(); 
     });
 
     socket.on('close', function () {
-        console.log('--- client No.' + clientsCounter + ' connection end ---------------------------');
+        console.log('--- client No.' + clientsCounter + ' connection end ');
         clientsCounter--;
     });
 });
