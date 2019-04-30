@@ -9,12 +9,12 @@ export class Packet {
     public combData: Uint8Array;
 
     constructor(protocol: string, binary: string) {
-        // レイヤ1の情報
-        this.layer1 = new layer1(protocol);
-        // レイヤ2の情報
-        this.layer2 = new layer2(protocol, binary);
         // ペイロード部分
         this.data = Uint8Array.from(Buffer.from(binary, 'hex'));
+        // レイヤ2の情報
+        this.layer2 = new layer2(protocol, Buffer.from(binary, 'hex'));
+        // レイヤ1の情報
+        this.layer1 = new layer1(protocol);
         // 結合後のデータの長さを確保
         this.combData = new Uint8Array(this.layer1.size + this.layer2.size + this.data.length)
     }
@@ -24,7 +24,6 @@ export class Packet {
         pos = this.combL1(pos);
         pos = this.combL2(pos);
         this.pushToComData(this.data, pos);
-        console.log(this.combData);
     }
 
     private combL1(pos: number) {
@@ -58,8 +57,8 @@ class layer1 {
     size:number = 6;
 
     constructor(protocol: string) {
-        this.version = Uint8Array.from([0x00, 0x05]);
-        this.ttl = new Uint8Array(2);
+        this.version = Uint8Array.from([0x00, 0x01]);
+        this.ttl = Uint8Array.from([0x00, 0x05]);
 
         // protocolでtypeをTCP(0000)/UDP(FFFF)を設定する
         switch(protocol) {
@@ -79,9 +78,9 @@ class layer2 {
     type: Uint8Array;
     len: Uint8Array;
     digest: Uint8Array;
-    size: number = 6;
+    size: number = 4;
 
-    constructor(protocol: string, binary: string) {
+    constructor(protocol: string, binary: Buffer) {
         this.type = Uint8Array.from([0xdd, 0xdd]); // L3(Data)のタイプにDDDDを設定
         const len = ('0000' + binary.length.toString(16)).slice(-4); // 4桁の文字列にする
         this.len = Uint8Array.from([parseInt(len.slice(0, 2), 16), parseInt(len.slice(2, 4), 16)]); // 前半後半で切り分けて格納
@@ -90,17 +89,21 @@ class layer2 {
         switch (protocol) {
             case 'tcp':
             case 'TCP':
-                const digest = ('0000' + this.md5hex(binary)).slice(-4); // 4桁の文字列にする
-                this.digest = Uint8Array.from([parseInt(digest.slice(0, 2), 16), parseInt(digest.slice(2, 4), 16)]); // 前半後半で切り分けて格納
-                this.size += 6;
+                const digest = ('00000000' + this.md5hex(binary)).slice(-8); // 4桁の文字列にする
+                this.digest = Uint8Array.from([
+                    parseInt(digest.slice(0, 2), 16), 
+                    parseInt(digest.slice(2, 4), 16),
+                    parseInt(digest.slice(4, 6), 16),
+                    parseInt(digest.slice(6, 8), 16)]); // 前半後半で切り分けて格納
+                this.size += 4;
                 break;
         }
     }
 
     // 文字列からmd5を返す
-    private md5hex(src: string) {
+    private md5hex(buf: Buffer) {
         const md5hash = crypto.createHash('md5');
-        md5hash.update(src, 'utf8');
+        md5hash.update(buf);
         return md5hash.digest('hex');
     };
 };
