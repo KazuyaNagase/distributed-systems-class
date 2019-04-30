@@ -23,5 +23,6 @@ client/server共に、TypeScriptで書いたnodeのコードをts-loder(TypeScir
 3. 作成したファイルを実行
 
    ```node ./dist/main.js```
+   ```node ././dist/main.js (tcp or udp) (fileName(client/resource配下のファイルを指定)) ```
 
 でclient/serverが起動します
