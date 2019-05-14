@@ -5,37 +5,58 @@
 #include <stdlib.h>
 #include <string.h>
 
-int val = 0;
-
-void capitalize(char *str)
+void parent(int fildes[2])
 {
-    int i;
+    char str[] = "hello\n";
+    int i = 0;
+    close(fildes[0]);
     for (i = 0; i <= strlen(str); i++)
     {
-        /* アルファベットの大文字なら変換 */
-        if ((str[i] >= 'A') && (str[i] <= 'Z'))
-        {
-            str[i] = str[i] + 0x20;
-        }
+        write(fildes[1], &str[i], 1);
     }
+    close(fildes[1]);
+}
 
-    printf("%s \n", str);
+void child(int fildes[2])
+{
+    char c;
+    close(fildes[1]);
+    while (read(fildes[0], &c, 1) > 0)
+    {
+        if (c >= 97 && c <= 122)
+        {
+            c -= 0x20;
+        }
+        write(1, &c, 1);
+    }
+    close(fildes[0]);
 }
 
 int main(void)
 {
-    char str[] = "HELLO";
-    int status;
-    int pid, wait_pid;
+    int fildes[2];
+    int pid_t, pid;
+    /*
+    fildes[0]: for reading
+    fildes[1]: for writeing
+    */
 
-    pid = fork();
-    if(pid == 0) {
-        capitalize("child");
-        exit(0);
+    if (pipe(fildes) == -1)
+    {
+        perror("pipe");
+        exit(1);
     }
-
-    printf("parent, child is %d\n", pid);
-    capitalize("parent");
-
-    return 0;
+    if ((pid = fork()) == 0)
+    {
+        child(fildes);
+    }
+    else if (pid > 0)
+    {
+        parent(fildes);
+    }
+    else
+    {
+        perror("fork");
+        exit(1);
+    }
 }
