@@ -26,5 +26,4 @@ int main(void) {
     char str[] = "HELLO";
     iret = pthread_create(&thread, NULL, (void* (*)(void*))capitalize, str);
     pthread_join(thread, NULL);
-    printf("end\n");
 }
