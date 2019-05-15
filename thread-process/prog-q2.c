@@ -5,31 +5,35 @@
 #include <stdlib.h>
 #include <string.h>
 
+char str[] = "hello\n";
+
 void parent(int fildes[2])
 {
-    char str[] = "hello\n";
-    int i = 0;
-    close(fildes[0]);
-    for (i = 0; i <= strlen(str); i++)
-    {
-        write(fildes[1], &str[i], 1);
-    }
+    char str;
+    // 使用しないwriteをclose
     close(fildes[1]);
+
+    // readもclose
+    close(fildes[0]);
 }
 
 void child(int fildes[2])
 {
-    char c;
-    close(fildes[1]);
-    while (read(fildes[0], &c, 1) > 0)
-    {
-        if (c >= 97 && c <= 122)
-        {
-            c -= 0x20;
-        }
-        write(1, &c, 1);
-    }
+    int i = 0;
+    // 使用しないreadをclose
     close(fildes[0]);
+    for (i = 0; i <= strlen(str); i++)
+    {
+        // 小文字なら大文字に変換
+        if (str[i] >= 97 && str[i] <= 122)
+        {
+            str[i] -= 0x20;
+        }
+        // 送信
+        write(fildes[1], &str[i], 1);
+    }
+    // writeもclose
+    close(fildes[1]);
 }
 
 int main(void)
