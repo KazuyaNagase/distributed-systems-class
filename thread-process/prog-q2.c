@@ -12,7 +12,11 @@ void parent(int fildes[2])
     char str;
     // 使用しないwriteをclose
     close(fildes[1]);
-
+    while (read(fildes[0], &str, 1) > 0)
+    {
+        // 子から読み取った文字を表示
+        write(1, &str, 1);
+    }
     // readもclose
     close(fildes[0]);
 }
