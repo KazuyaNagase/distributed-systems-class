@@ -1,0 +1,20 @@
+{
+  "scripts": {
+    "build": "webpack"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "readline-sync": "^1.4.9",
+    "ts-loader": "^5.4.4",
+    "typescript": "^3.4.5",
+    "underscore": "^1.9.1",
+    "webpack": "^4.30.0",
+    "webpack-cli": "^3.3.1"
+  },
+  "dependencies": {
+    "@types/node": "^11.13.8",
+    "@types/underscore": "^1.9.2"
+  }
+}
