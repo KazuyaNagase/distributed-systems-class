@@ -1,7 +1,9 @@
 import * as _ from 'underscore';
 import * as net from 'net';
 
-let timeStamp: number; // クライアントのタイムスタンプ
+let timeStampSelf: number = null; // 自分自身のタイムスタンプ
+let timeStampOther: number = null; // 他のクライアントのタイムスタンプ
+let exeQueue: any = []; // 実行キュー
 
 /*
 
@@ -9,44 +11,20 @@ let timeStamp: number; // クライアントのタイムスタンプ
 
 */
 {
-    // serverを用意
-    let server = net.createServer();
-
-    // Applicationを実行するQueue
-
-
     // server 待ち受け開始　(9090)
-    server.on('connection', (socket) => {
-
-        console.log('--- client No. connection starts ');
-
-        // 通信開始
-        socket.on('data', (timeStamp) => {
-
-            // 切断する
-            socket.end();
+    let server = net.createServer((connection) => {
+        connection.on('data', (data) => {
+            timeStampOther = parseInt(data.toString());
+            exeQueue.push(timeStampOther);
+            console.log('ACK1-2:  ' + timeStampOther);
+            exeApp();
         });
-
-        socket.on('close', function () {
-            console.log('--- client No. connection end ');
+        connection.on('error', () => {
+            console.log('server: client made error');
         });
-    });
-
-    process.on('SIGINT', function () {
-        server.close();
-    });
-
-    server.on('close', function () {
-        console.log('Server Closed');
-    });
-
-    server.on('listening', function () {
-        const addr = server.address() as net.AddressInfo;
-        console.log('Listening Start on Server --- ' + addr.address + '-' + addr.port + '-------------------');
-    });
-
-    server.listen(9090, '127.0.0.1');
+    }).listen(9090);
 }
+
 /*
 
  Clientを起動
@@ -55,33 +33,50 @@ let timeStamp: number; // クライアントのタイムスタンプ
 {
     //入力待機
     const readlineSync = require("readline-sync");
-    console.log('タイムスタンプを入力してください (999以下の数字)'); //質問表示
+    console.log('現在のタイムスタンプを入力してください (999以下の数字)'); //質問表示
     while (1) {
         const input = readlineSync.question() as number; //入力待ち
         if (input <= 999) {
-            timeStamp
+            timeStampSelf = input;
+            exeQueue.push(parseInt(timeStampSelf.toString()));
             break;
         }
         console.log('入力形式にエラー')
     }
 
+        // リクエストが始まる
+    console.log('REQ2:  ' + timeStampSelf);
 
-    // socketを用意
-    const socket = new net.Socket();
+    // 自身にACKを送る処理で1追加
+    console.log('ACK2-2:  ' + ++timeStampSelf);
 
-    // port: 8080, localhostに接続
-    socket.connect(8080, 'localhost', function () {
-        console.log('--- client 02 start ----------------------');
-        socket.write(timeStamp.toString()); // serverにデータを送信
+    // clientを用意
+    const client = new net.Socket();
+    client.setEncoding('utf8');
+
+    // port: 8080, locpalhostに接続
+    client.connect(8080, 'localhost', () => {
+        client.write(timeStampSelf.toString());
     });
+}
 
-    // データを送信
-    socket.on('data', () => {
-        console.log('Response -> received');
-    });
+// タイムスタンプを同期する
+const lamport = () => {
+    // 相手のほうが早ければ、相手ののタイムスタンプに+1して時刻を合わせる
+    if (timeStampSelf < timeStampOther) {
+        timeStampSelf = timeStampOther + 1;
+        console.log('タイムスタンプを更新:  ' + timeStampSelf)
+    }
+}
 
-    // コネクションを切断
-    socket.on('close', function () {
-        console.log('socket-> connection is closed');
-    });
+// アプリケーションをキューから実行する
+const exeApp = () => {
+    if (_.first(exeQueue) === timeStampSelf) {
+        console.log('execute Task -> 1');
+        console.log('execute Task -> 2');
+    } else {
+        console.log('execute Task -> 2');
+        console.log('execute Task -> 1');
+    }
+    lamport();
 }
