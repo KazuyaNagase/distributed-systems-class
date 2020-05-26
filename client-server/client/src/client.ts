@@ -7,6 +7,8 @@ import * as childProcess from 'child_process';
 const protocol = process.argv[2];
 const fileName = process.argv[3];
 
+console.log(fileName)
+
 // バイナリ形式ファイルを読み込む
 // nodeのfs(file system)にbinary modeが見つからなかったため、ホストのbashを実行、xxd -p 'fileName'の出力を受け取る(1024バイト以上は切り捨てる)
 const str = childProcess.execSync('xxd -p resource/' + fileName).toString().slice(0, 1024);

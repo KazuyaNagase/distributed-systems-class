@@ -1,28 +1,37 @@
-##  構成
-
-最終的にはnodeのライブラリ(net)[https://nodejs.org/api/net.html]を使用したソケット通信をしています
-
-client/server共に、TypeScriptで書いたnodeのコードをts-loder(TypeScirptのコンパイラ)でnodeにコンパイルし、webpack(jsのモジュールハンドラ)で単一ファイル(dist/main.js)にまとめ、そのmain.jsを実行してソケット通信を行います。
-
-
-
 ## 実行方法
 
-0. client/serverフォルダに移動
+1. client/serverフォルダに移動
 
-   ```cd client or server```
+```cd client or server```
 
-1. ライブラリ依存関係の解決
+2. ライブラリ依存関係の解決
 
-   ```npm install```
+```npm install```
 
-2. TypeScriptをコンパイルして単一ファイルにまとめる
+3. TypeScriptをコンパイルして単一ファイルにまとめる
 
-   ```npm run build```
+```npm run build```
 
-3. 作成したファイルを実行
+4. 作成したファイルを実行
 
-   ```node ./dist/main.js```
-   ```node ././dist/main.js (tcp or udp) (fileName(client/resource配下のファイルを指定)) ```
+サーバー側実行
+
+```node dist/main.js```
+
+クライアント側 実行
+
+``` node dist/main.js tcp ../resource/aaa.txt ```
+
+第一引数 - tcp or udp
+
+第二引数 - main.jsから送信するリソースファイルへの相対パス
+
+
 
 でclient/serverが起動します
+
+
+
+実行結果
+
+![実行結果](./実行結果.png)
