@@ -51,7 +51,7 @@ int main(int argc, char** argv)
     hexdump(buf,sizeof(buf));
     struct instance instance;
     parse_instance(buf,&instance);
-    printf("\nパース完了\n");
+    printf("\nFinish Task\n");
     char *str1 = find_field_from_instance("str1",&instance);
     char *str2 = find_field_from_instance("str2",&instance);
     printf("str1 : %s\n",str1);
